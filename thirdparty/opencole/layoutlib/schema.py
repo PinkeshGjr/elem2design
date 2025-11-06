@@ -154,7 +154,7 @@ def get_element_pydantic_model(
                     [f'"{name}"' for name in class_names]
                 )
 
-            validators[f"{key}_validator"] = validator(key, allow_reuse=True)(
+            validators[f"{key}_validator"] = field_validator(key)(
                 partial(_is_categorical_key, class_names=class_names, key=key)
             )
 
@@ -163,7 +163,7 @@ def get_element_pydantic_model(
             if column.quantization is None:
                 description += f"range: {column.vmin} <= {key} <= {column.vmax}"
                 type_ = float  # type: ignore
-                validators[f"{key}_validator"] = validator(key, allow_reuse=True)(
+                validators[f"{key}_validator"] = field_validator(key)(
                     partial(
                         _is_float_in_reasonable_range,
                         key=key,
@@ -175,7 +175,7 @@ def get_element_pydantic_model(
                 vmin, vmax = 0, column.num_bin - 1  # type: ignore
                 description += f"range: {vmin} <= {key} <= {vmax}"
                 type_ = int  # type: ignore
-                validators[f"{key}_validator"] = validator(key, allow_reuse=True)(
+                validators[f"{key}_validator"] = field_validator(key)(
                     partial(_is_valid_for_bucketizer, key=key, vmin=vmin, vmax=vmax)
                 )
 
