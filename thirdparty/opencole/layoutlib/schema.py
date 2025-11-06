@@ -5,12 +5,7 @@ from typing import Any
 
 import datasets as ds
 import yaml  # type: ignore
-from pydantic import BaseModel
-from langchain_core.pydantic_v1 import (
-    Field,
-    create_model,
-    validator,
-)
+from pydantic import BaseModel, Field, create_model, field_validator
 
 from layoutlib.util import mock_string
 
@@ -34,12 +29,14 @@ class NumericalAttribute(BaseModel):  # type: ignore
     vmin: float = 0.0
     vmax: float = 1.0
 
-    @validator("quantization")
+    @field_validator("quantization")
+    @classmethod
     def check_quantization_vocab(cls, field):  # type: ignore
         assert field in ["linear", "kmeans", None], field
         return field
 
-    @validator("num_bin")
+    @field_validator("num_bin")
+    @classmethod
     def check_num_bin(cls, field):  # type: ignore
         assert field > 0, field
         return field
@@ -60,7 +57,8 @@ class ElementSchema(BaseModel):  # type: ignore
     numerical_attributes: dict[str, NumericalAttribute] = {}  # ds.Value(dtype='float')
     categorical_attributes: list[str] = []  # ds.ClassLabel (handled as int)
 
-    @validator("attribute_order")
+    @field_validator("attribute_order")
+    @classmethod
     def check_num_bin(cls, field):  # type: ignore
         assert len(field) > 0, field
         return field
