@@ -7,7 +7,7 @@ from copy import deepcopy
 from typing import Any
 
 import torch
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.exceptions import OutputParserException
 from PIL import Image
 

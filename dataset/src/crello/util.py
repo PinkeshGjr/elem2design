@@ -6,7 +6,7 @@ from pathlib import Path
 
 import datasets as ds
 from common.io import read_json, read_pkl, write_pkl
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from layoutlib.hfds import sample_example
 from layoutlib.hfds.crello import ADDITIONAL_FONT_PROPERTIES
 from layoutlib.hfds.util import fill_missing_values

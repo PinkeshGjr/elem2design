@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import torch
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from PIL import Image
 
 from layoutlib.hfds import hfds_helper_factory, sample_example

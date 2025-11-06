@@ -8,7 +8,7 @@ from functools import partial
 from pathlib import Path
 
 import datasets as ds
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from PIL import Image
 from tqdm import tqdm
 
