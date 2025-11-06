@@ -19,6 +19,8 @@ cd elem2design
 ```
 
 2. Install
+
+**For all platforms:**
 ```bash
 conda create -n e2d python=3.10 -y
 conda activate e2d
@@ -28,10 +30,17 @@ pip install -e thirdparty/opencole
 pip install -e dataset/src
 ```
 
-3. Install additional packages for training cases
+**Note for macOS users:** Quantization features (4-bit/8-bit inference) are not available on macOS as they require CUDA. The model will run in full precision (fp16/fp32) mode.
+
+3. Install additional packages for training (Linux/CUDA only)
 ```bash
 pip install -e ".[train]"
 pip install flash-attn --no-build-isolation
+```
+
+4. (Optional) Install quantization support for 4-bit/8-bit inference (Linux/CUDA only)
+```bash
+pip install -e ".[quantization]"
 ```
 
 # How to Use

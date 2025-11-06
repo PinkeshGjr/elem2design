@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - 2025-11-06
 
+### macOS Compatibility Fix (2025-11-06)
+
+#### Changed
+- **Moved bitsandbytes to optional dependencies**
+  - `bitsandbytes` is now in the `[quantization]` optional group
+  - Version requirement relaxed to `>=0.42.0` (was `>=0.45.0`)
+  - macOS users can now install without quantization support
+  - Quantization (4-bit/8-bit) requires CUDA and is Linux-only
+
+#### Added
+- New optional dependency group: `[quantization]`
+  - Install with: `pip install -e ".[quantization]"`
+  - Only needed for 4-bit/8-bit quantized inference
+  - CUDA/Linux only - not supported on macOS
+
+#### Documentation
+- Added macOS-specific installation notes in README
+- Clarified that quantization features require CUDA
+- Models run in fp16/fp32 mode on macOS (no quantization)
+
 ### Updated Dependencies
 
 #### Core Libraries
