@@ -72,8 +72,100 @@ def on_selection_change(selected_value):
 
 
 def run_stage_1(upload_images):
-    gr.Info("please implement the layer planning stage")
-    return [], [], [], []
+    """
+    Classify uploaded images into design layers using the LLaVA model.
+
+    Args:
+        upload_images: List of uploaded image file paths
+
+    Returns:
+        Tuple of (background_elements, underlay_elements, image_elements, embellishment_elements)
+    """
+    if not upload_images:
+        gr.Info("Please upload images first!")
+        return [], [], [], []
+
+    # Layer classification prompt
+    task_prompt = (
+        "You are an excellent graphic designer and capable of identifying the role of each element within a complete design. "
+        "Your task is to determine the role of the given element, which is rendered as an image. "
+        "There are 4 possible options: `Background`, `Underlay`, `Logo/Image` or `Embellishment`. "
+        "Please refer to the detailed descriptions below to make your prediction. "
+        "\nBackground: The foundational layer of the design, typically large in size and covering the entire canvas. It may consist of a solid color, gradient, landscape image, or similar visual foundation. "
+        "\nUnderlay: A supportive layer placed beneath key content, often used to create contrast or highlight the main design elements, such as borders, buttons, color overlays, and so on. "
+        "\nLogo/Image: A core visual element that represents a brand, product, or entity. It combines both imagery and logo elements to capture attention and convey the primary message. "
+        "\nEmbellishment: Decorative elements that enhance visual appeal without conveying core information. These elements add style to the design. Note that they are usually small in size. "
+        "\nWhen you respond, please output only one word from the 4 options. "
+        "Do not include any additional explanations or irrelevant information."
+    )
+
+    # Initialize result lists
+    background_list = []
+    underlay_list = []
+    image_list = []
+    embellishment_list = []
+
+    gr.Info(f"Classifying {len(upload_images)} images into layers...")
+
+    with torch.inference_mode():
+        for image_path in upload_images:
+            try:
+                # Load and preprocess image
+                image = Image.open(image_path)
+                image = white_rgb_convert(image)
+                image = expand2square(image, tuple(int(x * 255) for x in image_processor.image_mean))
+                processed_image = image_processor.preprocess(image, return_tensors="pt", input_data_format="channels_last")["pixel_values"][0]
+
+                # Prepare conversation
+                conv = layout_conv.copy()
+                conv.sep2 = tokenizer.eos_token
+                conv.append_message("human", f"{task_prompt}\n\nThe element is: <image>\n\nPlease predict the given element role:")
+                conv.append_message("gpt", "")
+                prompt = conv.get_prompt()
+
+                # Tokenize
+                input_ids = tokenizer_image_token(prompt, tokenizer, return_tensors="pt").unsqueeze(0).to(device)
+                images = [processed_image.to(device, dtype=torch.float16)]
+                attention_mask = input_ids.ne(tokenizer.pad_token_id).to(device)
+
+                # Generate prediction
+                output_ids = model.generate(
+                    input_ids,
+                    images=images,
+                    attention_mask=attention_mask,
+                    do_sample=False,  # Use greedy decoding for classification
+                    pad_token_id=tokenizer.eos_token_id,
+                    max_length=100,  # Short output for classification
+                )
+
+                # Decode response
+                output = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
+                print(f"Image: {os.path.basename(image_path)} -> Predicted role: {output}")
+
+                # Parse classification result
+                output_lower = output.lower()
+                if "background" in output_lower:
+                    background_list.append(image_path)
+                elif "underlay" in output_lower:
+                    underlay_list.append(image_path)
+                elif "logo" in output_lower or "image" in output_lower:
+                    image_list.append(image_path)
+                elif "embellishment" in output_lower:
+                    embellishment_list.append(image_path)
+                else:
+                    # Default to image category if unclear
+                    gr.Warning(f"Unclear classification for {os.path.basename(image_path)}: '{output}'. Defaulting to Image.")
+                    image_list.append(image_path)
+
+            except Exception as e:
+                print(f"Error processing {image_path}: {e}")
+                gr.Warning(f"Failed to classify {os.path.basename(image_path)}: {str(e)}")
+                # Default to image category on error
+                image_list.append(image_path)
+
+    gr.Info(f"Classification complete! Background: {len(background_list)}, Underlay: {len(underlay_list)}, Image: {len(image_list)}, Embellishment: {len(embellishment_list)}")
+
+    return background_list, underlay_list, image_list, embellishment_list
 
 
 def construct_conversations(
