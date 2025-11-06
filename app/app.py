@@ -432,6 +432,8 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
+    global device  # Declare global at the start
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str, required=True, help="Path to the model checkpoint")
     parser.add_argument("--share", action="store_true", help="Create a public link (use with caution)")
@@ -441,8 +443,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     model_path = args.model_name_or_path
 
-    # Auto-detect device if not specified and set global device variable
-    global device
+    # Auto-detect device if not specified
     if args.device is None:
         if torch.cuda.is_available():
             device = "cuda"
