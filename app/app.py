@@ -27,6 +27,9 @@ title = r"""
 # Reverse mapping from layer name to index
 LABEL2INDEX = {v: k for k, v in LAYER_MAPPING.items()}
 
+# Global device variable - will be set in main
+device = None
+
 
 def swap_to_gallery(images):
     return gr.update(value=images, visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=False)
@@ -291,9 +294,9 @@ def run_stage_2(
                     images=processed_images,
                     new_images=new_images,
                 )
-                input_ids = sample["input_ids"].unsqueeze(0).to("cuda")
-                images = [sample["image"].to("cuda", dtype=torch.float16)]
-                attention_mask = input_ids.ne(tokenizer.pad_token_id).to("cuda")
+                input_ids = sample["input_ids"].unsqueeze(0).to(device)
+                images = [sample["image"].to(device, dtype=torch.float16)]
+                attention_mask = input_ids.ne(tokenizer.pad_token_id).to(device)
 
                 try:
                     output_ids = model.generate(
@@ -434,15 +437,30 @@ if __name__ == "__main__":
     parser.add_argument("--share", action="store_true", help="Create a public link (use with caution)")
     parser.add_argument("--server-port", type=int, default=7860, help="Port to run the server on")
     parser.add_argument("--server-name", type=str, default="127.0.0.1", help="Server name (use 0.0.0.0 for external access)")
+    parser.add_argument("--device", type=str, default=None, help="Device to use (cuda/mps/cpu). Auto-detected if not specified.")
     args = parser.parse_args()
     model_path = args.model_name_or_path
 
+    # Auto-detect device if not specified and set global device variable
+    global device
+    if args.device is None:
+        if torch.cuda.is_available():
+            device = "cuda"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+        else:
+            device = "cpu"
+    else:
+        device = args.device
+
+    print(f"Using device: {device}")
     print(f"Loading model from {model_path}...")
+
     with open(os.path.join(model_path, "adapter_config.json"), "r") as f:
         model_base = json.load(f)["base_model_name_or_path"]
     tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, model_base)
     tokenizer.pad_token_id = tokenizer.unk_token_id or 0
-    model = model.to("cuda")
+    model = model.to(device)
     print("Model loaded successfully!")
 
     demo.launch(
