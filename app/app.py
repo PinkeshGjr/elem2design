@@ -432,8 +432,6 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
-    global device  # Declare global at the start
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str, required=True, help="Path to the model checkpoint")
     parser.add_argument("--share", action="store_true", help="Create a public link (use with caution)")
