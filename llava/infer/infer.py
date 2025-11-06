@@ -31,6 +31,7 @@ from llava.conversation import layout_conv
 from llava.mm_utils import get_model_name_from_path, tokenizer_image_token
 from llava.model import *
 from llava.model.builder import load_pretrained_model
+from llava.constants import DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_CHANNELS, NUM_LAYERS
 
 
 def white_rgb_convert(img: Image):
@@ -103,11 +104,12 @@ class LazySupervisedDataset(Dataset):
                         image = white_rgb_convert(image)
                         image = expand2square(image, tuple(int(x * 255) for x in processor.image_mean))
                         image = processor.preprocess(image, return_tensors="pt", input_data_format="channels_last")["pixel_values"][0]
-                    except:
-                        image = torch.zeros(3, 336, 336)
+                    except Exception as e:
+                        print(f"Warning: Failed to load image {image_file}: {e}")
+                        image = torch.zeros(DEFAULT_IMAGE_CHANNELS, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)
                 else:
                     layer_image_list.append(image_idx)
-                    image = torch.zeros(3, 336, 336)
+                    image = torch.zeros(DEFAULT_IMAGE_CHANNELS, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)
                 images.append(image)
         else:
             for k, v in new_images.items():

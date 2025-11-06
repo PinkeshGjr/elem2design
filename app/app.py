@@ -5,6 +5,7 @@ import argparse
 from llava.mm_utils import tokenizer_image_token
 from llava.model import *
 from llava.model.builder import load_pretrained_model
+from llava.constants import LAYER_MAPPING, NUM_LAYERS, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_CHANNELS
 from PIL import Image
 import os
 import torch
@@ -23,7 +24,8 @@ title = r"""
 </h1>
 """
 
-LABEL2INDEX = {"Background": 0, "Underlay": 1, "Image": 2, "Text": 3, "Embellishment": 4}
+# Reverse mapping from layer name to index
+LABEL2INDEX = {v: k for k, v in LAYER_MAPPING.items()}
 
 
 def swap_to_gallery(images):
@@ -147,11 +149,12 @@ def get_item(
                     image = white_rgb_convert(image)
                     image = expand2square(image, tuple(int(x * 255) for x in image_processor.image_mean))
                     image = image_processor.preprocess(image, return_tensors="pt", input_data_format="channels_last")["pixel_values"][0]
-                except:
-                    image = torch.zeros(3, 336, 336)
+                except Exception as e:
+                    print(f"Warning: Failed to load image {image_file}: {e}")
+                    image = torch.zeros(DEFAULT_IMAGE_CHANNELS, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)
             else:
                 layer_image_list.append(image_idx)
-                image = torch.zeros(3, 336, 336)
+                image = torch.zeros(DEFAULT_IMAGE_CHANNELS, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)
             images.append(image)
     else:
         for k, v in new_images.items():
@@ -339,23 +342,23 @@ with gr.Blocks() as demo:
             gr.Markdown("""<h2 align="left">1️⃣ Layer division</h2>""")
 
             with gr.Accordion("Layer Planning (Optional)", open=False):
-                files = gr.File(file_count="multiple", file_types=["image"], label="Drag (Select) design elements")
-                uploaded_files = gr.Gallery(label="Uploaded elements", visible=False, columns=5, object_fit="contain", height="150px")
+                files = gr.File(file_count="multiple", file_types=["image"], type="filepath", label="Drag (Select) design elements")
+                uploaded_files = gr.Gallery(label="Uploaded elements", visible=False, columns=5, object_fit="contain", height=150)
                 with gr.Column(visible=False) as clear_button:
                     remove_and_reupload = gr.ClearButton(value="Remove and upload new ones", components=files, size="sm")
                 layer_planning_button = gr.Button(value="Submit (Stage I)", visible=False)
 
             with gr.Row(equal_height=True):
-                background_elements = gr.Gallery(label="Background", object_fit="contain", height="200px")
-                underlay_elements = gr.Gallery(label="Underlay", object_fit="contain", height="200px")
+                background_elements = gr.Gallery(label="Background", object_fit="contain", height=200)
+                underlay_elements = gr.Gallery(label="Underlay", object_fit="contain", height=200)
 
             with gr.Row():
                 background_btn = gr.Button(value="Move to", size="sm")
                 underlay_btn = gr.Button(value="Move to", size="sm")
 
             with gr.Row(equal_height=True):
-                image_elements = gr.Gallery(label="Image", object_fit="contain", height="200px")
-                embellishment_elements = gr.Gallery(label="Embellishment", object_fit="contain", height="200px")
+                image_elements = gr.Gallery(label="Image", object_fit="contain", height=200)
+                embellishment_elements = gr.Gallery(label="Embellishment", object_fit="contain", height=200)
 
             with gr.Row():
                 image_btn = gr.Button(value="Move to", size="sm")
@@ -427,13 +430,25 @@ with gr.Blocks() as demo:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name_or_path", type=str)
+    parser.add_argument("--model_name_or_path", type=str, required=True, help="Path to the model checkpoint")
+    parser.add_argument("--share", action="store_true", help="Create a public link (use with caution)")
+    parser.add_argument("--server-port", type=int, default=7860, help="Port to run the server on")
+    parser.add_argument("--server-name", type=str, default="127.0.0.1", help="Server name (use 0.0.0.0 for external access)")
     args = parser.parse_args()
     model_path = args.model_name_or_path
+
+    print(f"Loading model from {model_path}...")
     with open(os.path.join(model_path, "adapter_config.json"), "r") as f:
         model_base = json.load(f)["base_model_name_or_path"]
     tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, model_base)
     tokenizer.pad_token_id = tokenizer.unk_token_id or 0
     model = model.to("cuda")
+    print("Model loaded successfully!")
 
-    demo.launch(share=True, server_port=5678)
+    demo.launch(
+        share=args.share,
+        server_port=args.server_port,
+        server_name=args.server_name,
+        show_error=True,
+        show_api=False,
+    )

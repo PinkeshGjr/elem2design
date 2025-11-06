@@ -95,11 +95,21 @@ CUDA_VISIBLE_DEVICES=0 python llava/infer/infer.py \
 
 Besides command-line inference, we also provide a demo interface that allows users to interact with the model via a web-based UI. This interface makes it more user-friendly and better suited for running inference on custom datasets.
 
-To launch the web UI, run the following command:
+To launch the web UI (locally only, default):
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python app/app.py --model_name_or_path /path/to/model/checkpoint-xxxx
 ```
+
+For public sharing (creates a public URL - use with caution):
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python app/app.py --model_name_or_path /path/to/model/checkpoint-xxxx --share
+```
+
+Additional options:
+- `--server-port PORT`: Specify custom port (default: 7860)
+- `--server-name HOST`: Bind to specific host (use `0.0.0.0` for external access)
 
 # Evaluation
 

@@ -23,8 +23,21 @@ from llava.model import *
 from llava.constants import DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 
 
-def load_pretrained_model(model_path, model_base, load_8bit=False, load_4bit=False, device_map="auto", device="cuda", use_flash_attn=False, **kwargs):
-    kwargs = {"device_map": device_map, **kwargs}
+def load_pretrained_model(model_path, model_base, load_8bit=False, load_4bit=False, device_map="auto", device="cuda", use_flash_attn=False, trust_remote_code=False, **kwargs):
+    """Load a pretrained LLaVA model with optional LoRA weights.
+
+    Args:
+        model_path: Path to the model checkpoint
+        model_base: Base model name or path
+        load_8bit: Whether to load in 8-bit mode
+        load_4bit: Whether to load in 4-bit mode
+        device_map: Device mapping strategy
+        device: Target device
+        use_flash_attn: Whether to use Flash Attention 2
+        trust_remote_code: Whether to trust remote code (use with caution)
+        **kwargs: Additional arguments passed to model loading
+    """
+    kwargs = {"device_map": device_map, "trust_remote_code": trust_remote_code, **kwargs}
 
     if device != "cuda":
         kwargs['device_map'] = {"": device}
@@ -53,7 +66,7 @@ def load_pretrained_model(model_path, model_base, load_8bit=False, load_4bit=Fal
             lora_cfg_pretrained = LlavaConfig.from_pretrained(model_path)
         if 'mistral' in model_base:
             lora_cfg_pretrained = LlavaMistralConfig.from_pretrained(model_path)
-        tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
+        tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False, trust_remote_code=trust_remote_code)
         if 'llava' in model_base or 'llama' in model_base:
             print('Loading LLaVA from base model...')
             model = LlavaLlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs)

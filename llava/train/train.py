@@ -28,7 +28,15 @@ import torch
 import transformers
 import tokenizers
 
-from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+from llava.constants import (
+    IGNORE_INDEX,
+    IMAGE_TOKEN_INDEX,
+    DEFAULT_IMAGE_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IM_END_TOKEN,
+    DEFAULT_IMAGE_SIZE,
+    DEFAULT_IMAGE_CHANNELS,
+)
 from torch.utils.data import Dataset
 from llava.train.llava_trainer import LLaVATrainer
 
@@ -722,8 +730,9 @@ class LazySupervisedDataset(Dataset):
                 image = white_rgb_convert(image)
                 image = expand2square(image, tuple(int(x*255) for x in processor.image_mean))
                 image = processor.preprocess(image, return_tensors='pt', input_data_format="channels_last")['pixel_values'][0]
-            except:
-                image = torch.zeros(3, 336, 336)
+            except Exception as e:
+                print(f"Warning: Failed to load image {image_file}: {e}")
+                image = torch.zeros(DEFAULT_IMAGE_CHANNELS, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)
             images.append(image)
 
         conv = layout_conv.copy()

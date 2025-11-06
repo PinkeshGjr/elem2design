@@ -256,12 +256,13 @@ def metrics_und_l(clses, boxes):
 
 
 def is_contain(bb1, bb2):
+    """Check if bounding box bb1 contains bb2."""
     xl_1, yl_1, xr_1, yr_1 = bb1
     xl_2, yl_2, xr_2, yr_2 = bb2
 
     c1 = xl_1 <= xl_2
     c2 = yl_1 <= yl_2
-    c3 = xr_2 >= xr_2
+    c3 = xr_1 >= xr_2  # Fixed: was xr_2 >= xr_2 (always True)
     c4 = yr_1 >= yr_2
 
     return c1 and c2 and c3 and c4
