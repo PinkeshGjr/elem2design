@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages
 
+# Find all packages including layoutlib which is at the same level
+packages = find_packages(include=['opencole', 'opencole.*', 'layoutlib', 'layoutlib.*'])
+
 setup(
     name="opencole",
     version="0.1.0",
-    packages=find_packages(),
+    packages=packages,
     python_requires=">=3.10",
     install_requires=[
         "skia-python>=87.5",
