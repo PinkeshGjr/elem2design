@@ -1,0 +1,67 @@
+# Quote Overlay Project Dependencies
+# These are additional dependencies beyond the base elem2design requirements
+
+# Core dependencies (already in elem2design)
+# torch>=2.5.0
+# transformers>=4.47.0
+# gradio>=5.7.0
+# pillow>=10.0.0
+
+# Additional dependencies for quote overlay
+
+# Image processing
+opencv-python>=4.8.0
+scikit-image>=0.22.0
+
+# Color analysis and harmony
+colormath>=3.0.0
+webcolors>=1.13
+
+# Font handling
+matplotlib>=3.8.0  # For font rendering
+fonttools>=4.47.0
+
+# Text rendering
+reportlab>=4.0.0  # PDF/image text rendering
+aggdraw>=1.3.16  # Better text rendering on PIL
+
+# OCR for readability evaluation
+pytesseract>=0.3.10
+easyocr>=1.7.0
+
+# Evaluation metrics
+scikit-learn>=1.3.0
+scipy>=1.11.0
+lpips>=0.1.4  # Perceptual similarity
+
+# Dataset download utilities
+gdown>=4.7.1  # Google Drive downloads
+huggingface-hub>=0.20.0
+
+# Data processing
+pandas>=2.1.0
+pyarrow>=14.0.0  # For faster parquet reading
+
+# API server (optional)
+fastapi>=0.108.0
+uvicorn>=0.25.0
+python-multipart>=0.0.6
+
+# Progress bars
+tqdm>=4.66.0
+
+# YAML config
+pyyaml>=6.0.1
+
+# Logging
+wandb>=0.16.0  # For experiment tracking (optional)
+
+# Contrast checking (WCAG compliance)
+contrast-checker>=1.0.0
+
+# Image quality assessment
+piq>=0.8.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
